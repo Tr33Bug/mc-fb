@@ -10,6 +10,7 @@ export interface SimpleState {
   currentPath: string;
   items: FileItem[];
   selectedIndex: number;
+  scrollOffset: number;
   error: string | null;
   history: string[];
 }
