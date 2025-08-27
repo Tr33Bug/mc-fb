@@ -233,14 +233,14 @@ const keyBindings = {
 - [x] Add basic error handling for permissions
 - [ ] Start in current working directory (process.cwd())
 
-### Phase 2: Single Column Navigation (Day 3)
+### Phase 2: Single Column Navigation (Day 3) ✅
 **Goal: Navigate up/down in a single column**
-- [ ] Implement keyboard navigation
-  - [ ] Up/down arrows to move selection
-  - [ ] Track selected index in state
-  - [ ] Handle bounds (top/bottom of list)
-- [ ] Visual selection indicator (> or highlight)
-- [ ] Display current path at bottom
+- [x] Implement keyboard navigation
+  - [x] Up/down arrows to move selection
+  - [x] Track selected index in state
+  - [x] Handle bounds (top/bottom of list)
+- [x] Visual selection indicator (> or highlight)
+- [x] Display current path at bottom
 
 ### Phase 3: Folder Navigation (Day 4)
 **Goal: Enter folders and navigate back**
