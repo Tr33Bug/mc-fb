@@ -242,14 +242,15 @@ const keyBindings = {
 - [x] Visual selection indicator (> or highlight)
 - [x] Display current path at bottom
 
-### Phase 2.5: Critical Fix - Viewport Scrolling (URGENT)
+### Phase 2.5: Critical Fix - Viewport Scrolling (URGENT) ✅
 **Goal: Fix viewport overflow issue discovered in testing**
-- [ ] Calculate visible area (container height - borders - status bar)
-- [ ] Implement viewport window (only render visible items)
-- [ ] Add scroll offset tracking
-- [ ] Ensure selected item auto-scrolls into view
-- [ ] Add scroll indicators (e.g., "↑ 5 more" / "↓ 10 more")
-- [ ] Test with directories containing 50+ files
+- [x] Calculate visible area (container height - borders - status bar)
+- [x] Implement viewport window (only render visible items)
+- [x] Add scroll offset tracking
+- [x] Ensure selected item auto-scrolls into view
+- [x] Add scroll indicators (e.g., "↑ 5 more" / "↓ 10 more")
+- [x] Test with directories containing 50+ files
+- [x] BONUS: Added Page Up/Down, Home, End keys
 
 ### Phase 3: Folder Navigation (Day 4)
 **Goal: Enter folders and navigate back**
