@@ -33,6 +33,8 @@ bun run src/index.ts
 ### Keyboard Controls
 
 - **↑/↓**: Navigate up/down in current column
+- **Page Up/Page Down**: Navigate by page
+- **Home/End**: Jump to first/last item
 - **←**: Move to parent directory
 - **→**: Enter folder or open file
 - **q**: Quit application
