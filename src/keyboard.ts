@@ -8,6 +8,10 @@ export enum KeyCode {
   Q = 'q',
   Q_UPPER = 'Q',
   CTRL_C = '\u0003',
+  PAGE_UP = '\u001b[5~',
+  PAGE_DOWN = '\u001b[6~',
+  HOME = '\u001b[H',
+  END = '\u001b[F',
 }
 
 export class KeyboardHandler {
