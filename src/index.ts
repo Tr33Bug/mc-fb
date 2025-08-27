@@ -19,6 +19,7 @@ async function main() {
     currentPath: process.cwd(),
     items: [],
     selectedIndex: 0,
+    scrollOffset: 0,
     error: null,
     history: [],
   };
@@ -26,7 +27,13 @@ async function main() {
   // UI element references
   let fileListBox: BoxRenderable;
   let statusBar: TextRenderable;
+  let scrollIndicatorTop: TextRenderable;
+  let scrollIndicatorBottom: TextRenderable;
   let fileItems: TextRenderable[] = [];
+
+  // Calculate viewport dimensions
+  const VIEWPORT_HEIGHT = renderer.height - 4; // Account for borders and status bar
+  const MAX_VISIBLE_ITEMS = Math.max(1, VIEWPORT_HEIGHT - 2); // Leave room for scroll indicators
 
   try {
     // Load initial directory
@@ -42,47 +49,103 @@ async function main() {
       titleAlignment: 'center',
     });
 
-    // Create file list container
+    // Create file list container with fixed height
     fileListBox = new BoxRenderable('file-list', {
       width: '100%',
-      height: '90%',
+      height: VIEWPORT_HEIGHT,
       border: false,
     });
+
+    // Create scroll indicators
+    scrollIndicatorTop = new TextRenderable('scroll-top', {
+      content: '',
+      fg: 'yellow',
+    });
+    scrollIndicatorTop.x = 2;
+    scrollIndicatorTop.y = 0;
+
+    scrollIndicatorBottom = new TextRenderable('scroll-bottom', {
+      content: '',
+      fg: 'yellow',
+    });
+    scrollIndicatorBottom.x = 2;
+    scrollIndicatorBottom.y = MAX_VISIBLE_ITEMS + 1;
 
     // Create status bar
     statusBar = new TextRenderable('status', {
       content: `Path: ${state.currentPath} | Files: ${state.items.length} | ↑↓ Navigate | q: Quit`,
     });
-    statusBar.y = -2;
+    statusBar.y = VIEWPORT_HEIGHT + 1;
 
-    // Function to render file list
+    // Function to calculate scroll offset
+    function updateScrollOffset() {
+      // Auto-scroll to keep selected item visible
+      if (state.selectedIndex < state.scrollOffset) {
+        state.scrollOffset = state.selectedIndex;
+      } else if (state.selectedIndex >= state.scrollOffset + MAX_VISIBLE_ITEMS) {
+        state.scrollOffset = state.selectedIndex - MAX_VISIBLE_ITEMS + 1;
+      }
+    }
+
+    // Function to render file list with viewport scrolling
     function renderFileList() {
       // Clear existing items
       fileItems.forEach(item => fileListBox.remove(item.id));
       fileItems = [];
+      
+      // Remove old scroll indicators
+      fileListBox.remove(scrollIndicatorTop.id);
+      fileListBox.remove(scrollIndicatorBottom.id);
 
-      // Add file items with selection indicator
-      state.items.forEach((item, index) => {
-        const isSelected = index === state.selectedIndex;
+      // Calculate visible range
+      updateScrollOffset();
+      const visibleStart = state.scrollOffset;
+      const visibleEnd = Math.min(state.items.length, state.scrollOffset + MAX_VISIBLE_ITEMS);
+
+      // Add top scroll indicator if needed
+      if (visibleStart > 0) {
+        scrollIndicatorTop.content = `↑ ${visibleStart} more`;
+        fileListBox.add(scrollIndicatorTop);
+      }
+
+      // Add visible file items
+      for (let i = visibleStart; i < visibleEnd; i++) {
+        const item = state.items[i];
+        if (!item) continue;
+
+        const isSelected = i === state.selectedIndex;
         const prefix = isSelected ? '> ' : '  ';
         const content = prefix + fileSystem.formatItemName(item);
         
-        const itemText = new TextRenderable(`item-${index}`, {
+        // Calculate display position (relative to viewport)
+        const displayY = i - visibleStart + (visibleStart > 0 ? 1 : 0);
+        
+        const itemText = new TextRenderable(`item-${i}`, {
           content: content,
           fg: isSelected ? 'cyan' : undefined,
         });
-        itemText.y = index;
+        itemText.y = displayY;
         itemText.x = 1;
         fileListBox.add(itemText);
         fileItems.push(itemText);
-      });
+      }
+
+      // Add bottom scroll indicator if needed
+      if (visibleEnd < state.items.length) {
+        scrollIndicatorBottom.content = `↓ ${state.items.length - visibleEnd} more`;
+        scrollIndicatorBottom.y = Math.min(MAX_VISIBLE_ITEMS, state.items.length - visibleStart) + (visibleStart > 0 ? 1 : 0);
+        fileListBox.add(scrollIndicatorBottom);
+      }
 
       // Update status bar
       const selectedItem = state.items[state.selectedIndex];
       const itemInfo = selectedItem 
         ? ` | Selected: ${selectedItem.name}${selectedItem.isDirectory ? '/' : ''}`
         : '';
-      statusBar.content = `Path: ${state.currentPath} | Files: ${state.items.length}${itemInfo} | ↑↓: Navigate | q: Quit`;
+      const scrollInfo = state.items.length > MAX_VISIBLE_ITEMS 
+        ? ` | ${state.selectedIndex + 1}/${state.items.length}`
+        : '';
+      statusBar.content = `Path: ${state.currentPath} | Files: ${state.items.length}${itemInfo}${scrollInfo} | ↑↓: Navigate | q: Quit`;
     }
 
     // Initial render
@@ -108,6 +171,33 @@ async function main() {
         renderFileList();
         renderer.needsUpdate();
       }
+    });
+
+    // Page navigation for faster scrolling
+    keyboard.on(KeyCode.PAGE_UP, () => {
+      const pageSize = Math.max(1, MAX_VISIBLE_ITEMS - 1);
+      state.selectedIndex = Math.max(0, state.selectedIndex - pageSize);
+      renderFileList();
+      renderer.needsUpdate();
+    });
+
+    keyboard.on(KeyCode.PAGE_DOWN, () => {
+      const pageSize = Math.max(1, MAX_VISIBLE_ITEMS - 1);
+      state.selectedIndex = Math.min(state.items.length - 1, state.selectedIndex + pageSize);
+      renderFileList();
+      renderer.needsUpdate();
+    });
+
+    keyboard.on(KeyCode.HOME, () => {
+      state.selectedIndex = 0;
+      renderFileList();
+      renderer.needsUpdate();
+    });
+
+    keyboard.on(KeyCode.END, () => {
+      state.selectedIndex = Math.max(0, state.items.length - 1);
+      renderFileList();
+      renderer.needsUpdate();
     });
 
     keyboard.on(KeyCode.Q, () => cleanup());
